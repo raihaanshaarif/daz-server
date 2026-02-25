@@ -14,11 +14,6 @@ const createContact = async (
     delete mappedPayload.country;
   }
 
-  if (payload.company !== undefined) {
-    mappedPayload.companyLinkedin = payload.company;
-    delete mappedPayload.company;
-  }
-
   const result = await prisma.contact.create({
     data: mappedPayload,
     include: {
