@@ -10,7 +10,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -19,13 +18,12 @@ model User {
   email      String     @unique
   password   String?
   role       Role       @default(USER)
-  phone      String
-  picture    String?
   status     UserStatus @default(ACTIVE)
   isVerified Boolean    @default(false)
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
   posts      Post[]
+  contacts   Contact[]
 }
 
 model Post {
@@ -40,6 +38,45 @@ model Post {
   author     User     @relation(fields: [authorId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model Country {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  code      String? // ISO country code like "US", "CA", etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contacts Contact[]
+}
+
+model Contact {
+  id               Int      @id @default(autoincrement())
+  name             String
+  email            String
+  company          String
+  domain           String?
+  countryId        Int?
+  companyLinkedin  String?
+  personalLinkedin String?
+  status           Status   @default(NOT_SENT)
+  note             String?
+  authorId         Int
+  author           User     @relation(fields: [authorId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  country          Country? @relation(fields: [countryId], references: [id])
+}
+
+enum Status {
+  NOT_SENT
+  NEW
+  CONTACTED
+  RESPONDED
+  QUALIFIED
+  NEGOTIATING
+  CLOSED_WON
+  CLOSED_LOST
 }
 
 enum Role {
