@@ -1,5 +1,6 @@
 import { Contact, Prisma } from "@prisma/client";
 import { prisma } from "../../config/db";
+import { TaskService } from "../task/task.service";
 
 const createContact = async (
   payload: Prisma.ContactCreateInput,
@@ -28,6 +29,12 @@ const createContact = async (
     },
   });
   console.log("xx", result);
+
+  // Auto-sync task progress: count today's contacts for this user
+  if (result.authorId) {
+    await TaskService.syncTaskProgressForUser(result.authorId);
+  }
+
   return result;
 };
 

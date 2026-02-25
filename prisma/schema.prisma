@@ -13,17 +13,19 @@ datasource db {
 }
 
 model User {
-  id         Int        @id @default(autoincrement())
-  name       String
-  email      String     @unique
-  password   String?
-  role       Role       @default(USER)
-  status     UserStatus @default(ACTIVE)
-  isVerified Boolean    @default(false)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  posts      Post[]
-  contacts   Contact[]
+  id            Int        @id @default(autoincrement())
+  name          String
+  email         String     @unique
+  password      String?
+  role          Role       @default(USER)
+  status        UserStatus @default(ACTIVE)
+  isVerified    Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  posts         Post[]
+  contacts      Contact[]
+  tasksAssigned Task[]     @relation("TaskAssigner")
+  tasksReceived Task[]     @relation("TaskAssignee")
 }
 
 model Post {
@@ -67,6 +69,45 @@ model Contact {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   country          Country? @relation(fields: [countryId], references: [id])
+}
+
+model Task {
+  id           Int      @id @default(autoincrement())
+  title        String
+  description  String?
+  targetValue  Int
+  assignedById Int
+  assignedToId Int
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignedBy User           @relation("TaskAssigner", fields: [assignedById], references: [id])
+  assignedTo User           @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  dailyLogs  TaskDailyLog[]
+}
+
+model TaskDailyLog {
+  id     Int  @id @default(autoincrement())
+  taskId Int
+  task   Task @relation(fields: [taskId], references: [id])
+
+  date        DateTime
+  targetValue Int
+  achieved    Int      @default(0)
+
+  performance Float?
+  status      TaskStatus
+
+  createdAt DateTime @default(now())
+
+  @@unique([taskId, date])
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
+  FAILED
 }
 
 enum Status {
