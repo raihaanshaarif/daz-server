@@ -26,6 +26,7 @@ model User {
   contacts      Contact[]
   tasksAssigned Task[]     @relation("TaskAssigner")
   tasksReceived Task[]     @relation("TaskAssignee")
+  orders        Order[]
 }
 
 model Post {
@@ -53,22 +54,25 @@ model Country {
 }
 
 model Contact {
-  id               Int      @id @default(autoincrement())
+  id               Int       @id @default(autoincrement())
   name             String
   email            String
-  designation      String   @default("Unknown")
+  designation      String    @default("Unknown")
   company          String
   domain           String?
   countryId        Int?
   companyLinkedin  String?
   personalLinkedin String?
-  status           Status   @default(NOT_SENT)
+  status           Status    @default(NOT_CONTACTED)
   note             String?
   authorId         Int
-  author           User     @relation(fields: [authorId], references: [id])
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  country          Country? @relation(fields: [countryId], references: [id])
+  author           User      @relation(fields: [authorId], references: [id])
+  lastContactedAt  DateTime?
+  lastRepliedAt    DateTime?
+  nextFollowUpAt   DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  country          Country?  @relation(fields: [countryId], references: [id])
 }
 
 model Task {
@@ -111,14 +115,32 @@ enum TaskStatus {
 }
 
 enum Status {
-  NOT_SENT
-  NEW
-  CONTACTED
-  RESPONDED
-  QUALIFIED
-  NEGOTIATING
-  CLOSED_WON
-  CLOSED_LOST
+  NOT_CONTACTED // Email not sent yet
+
+  CONTACTED // Initial email sent
+  FOLLOW_UP_SENT // Follow-up sent
+
+  ENGAGED // Buyer replied / conversation active
+  INTERESTED // Expressed sourcing interest
+  QUALIFIED // Meets MOQ, price, product fit
+
+  CATALOG_SENT // Profile / catalog shared
+
+  SAMPLE_REQUESTED // Sample requested
+  SAMPLE_SENT // Sample dispatched
+
+  PRICE_NEGOTIATION // Price discussion ongoing
+
+  CLOSED_WON // First order confirmed (PO received)
+  REPEAT_BUYER // Buyer placed 2+ orders
+
+  NON_RESPONSIVE // Stopped replying
+  REENGAGED // Replied after inactive period
+  DORMANT // Long inactive (60+ days)
+
+  NOT_INTERESTED // Explicitly said no
+  INVALID // Wrong email / bounced
+  DO_NOT_CONTACT // Asked to stop communication
 }
 
 enum Role {
@@ -131,4 +153,85 @@ enum UserStatus {
   ACTIVE
   INACTIVE
   BLOCK
+}
+
+model Buyer {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  brand  String?
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Factory {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id Int @id @default(autoincrement())
+
+  orderNumber String    @unique
+  shipDate    DateTime?
+  dept        String?
+  style       String?
+  color       String?
+  lot         String?
+
+  quantity   Int
+  price      Float
+  totalPrice Float
+
+  factoryUnitPrice  Float?
+  totalFactoryPrice Float?
+
+  dazCommission      Float?
+  discountFactory    Float?
+  discountFromDaz    Float?
+  discountRemark     String?
+  finalDazCommission Float?
+
+  paymentTerm String?
+
+  yarnBooking    DateTime?
+  labdipYarndip  DateTime?
+  printStrikeOff DateTime?
+  ppSample       DateTime?
+  bulkFabric     DateTime?
+  cutting        DateTime?
+  printing       DateTime?
+  swing          DateTime?
+  finishing      DateTime?
+  shipmentSample DateTime?
+  inspection     DateTime?
+  exFactory      DateTime?
+
+  overallRemarks String?
+
+  commissionStatus CommissionStatus @default(PENDING)
+  commissionAmount Float?
+
+  buyerId     Int
+  factoryId   Int
+  createdById Int
+
+  buyer     Buyer   @relation(fields: [buyerId], references: [id])
+  factory   Factory @relation(fields: [factoryId], references: [id])
+  createdBy User    @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderNumber])
+}
+
+enum CommissionStatus {
+  PENDING
+  PAID
 }

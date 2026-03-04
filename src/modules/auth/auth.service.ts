@@ -1,5 +1,6 @@
 import { prisma } from "../../config/db";
 import { Prisma, User } from "@prisma/client";
+import bcrypt from "bcrypt";
 
 const loginWithEmailAndPassword = async ({
   email,
@@ -19,7 +20,9 @@ const loginWithEmailAndPassword = async ({
     throw new Error("User not found!");
   }
 
-  if (password === user.password) {
+  // Compare the provided password with the hashed password
+  const isPasswordValid = await bcrypt.compare(password, user.password || "");
+  if (isPasswordValid) {
     return user;
   } else {
     throw new Error("Password is incorrect!");

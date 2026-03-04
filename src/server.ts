@@ -4,6 +4,8 @@ dotenv.config();
 import http, { Server } from "http";
 import app from "./app";
 import { prisma } from "./config/db";
+import bcrypt from "bcrypt";
+import { Role } from "@prisma/client";
 
 let server: Server | null = null;
 
@@ -20,6 +22,24 @@ async function connectToDB() {
 async function startServer() {
   try {
     await connectToDB();
+
+    // Seed default user if no users exist
+    const userCount = await prisma.user.count();
+    if (userCount === 0) {
+      console.log("No users found. Creating default SUPER_ADMIN user...");
+      const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || "10", 10);
+      const hashedPassword = await bcrypt.hash("sharif123", saltRounds);
+      await prisma.user.create({
+        data: {
+          name: "Sharif Ahmed",
+          email: "a.sharif@dazbd.com",
+          password: hashedPassword,
+          role: Role.SUPER_ADMIN,
+        },
+      });
+      console.log("Default user created.");
+    }
+
     server = http.createServer(app);
     server.listen(process.env.PORT, () => {
       console.log(`🚀 Server is running on port ${process.env.PORT}`);

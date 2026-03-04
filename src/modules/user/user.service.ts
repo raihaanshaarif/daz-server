@@ -1,8 +1,16 @@
 import { prisma } from "../../config/db";
 import { Prisma, User } from "@prisma/client";
+import bcrypt from "bcrypt";
 
 const createUser = async (payload: Prisma.UserCreateInput): Promise<User> => {
   console.log(payload);
+
+  // Hash the password if provided
+  if (payload.password) {
+    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || "10", 10);
+    payload.password = await bcrypt.hash(payload.password, saltRounds);
+  }
+
   const createdUser = await prisma.user.create({
     data: payload,
   });

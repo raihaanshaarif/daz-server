@@ -7,6 +7,7 @@ import { authRouter } from "./modules/auth/auth.routes";
 import { ContactRouter } from "./modules/contact/contact.router";
 import { CountryRouter } from "./modules/country/country.router";
 import { taskRouter } from "./modules/task/task.router";
+import { orderRouter } from "./modules/order/order.routes";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/contact", ContactRouter);
 app.use("/api/v1/country", CountryRouter);
 app.use("/api/v1/task", taskRouter);
+app.use("/api/v1/order", orderRouter);
 
 // Default route for testing
 app.get("/", (_req, res) => {
