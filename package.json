@@ -9,6 +9,9 @@
     "start": "node dist/server.js",
     "seed": "ts-node-dev --transpile-only src/seed.ts"
   },
+  "engines": {
+    "node": ">=22.12"
+  },
   "keywords": [],
   "author": "Next Level Web Development",
   "license": "ISC",
